@@ -1,7 +1,11 @@
 import tkinter
 from tkinter import filedialog
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageOps
 import numpy as np
+
+PANEL_W = 500
+PANEL_H = 400
+
 
 def startCompressing():
     return
@@ -17,10 +21,12 @@ def upload():
     originalImage = Image.open(file_path).convert("RGB")
     originalNp = np.array(originalImage)
     originalSize = originalImage.size
-
-    display_img = originalImage.copy()
-    display_img.thumbnail((380, 380), Image.Resampling.LANCZOS)
-    photo = ImageTk.PhotoImage(display_img)
+    display_img = ImageOps.contain(originalImage, (PANEL_W, PANEL_H), Image.Resampling.LANCZOS)
+    bg = Image.new("RGB", (PANEL_W, PANEL_H), (255, 255, 255))
+    x = (PANEL_W-display_img.width)//2
+    y = (PANEL_H-display_img.height)//2
+    bg.paste(display_img, (x, y))
+    photo = ImageTk.PhotoImage(bg)
     original_label.configure(image=photo, text="")
     original_label.image = photo
     proceLabel.configure(image="", text="Processed Image\n(Compressed/Decompressed)")
@@ -72,11 +78,16 @@ def create_gui():
 
     images_frame = tkinter.Frame(root, bg="#f0f0f0")
     images_frame.pack(pady=20)
-    
-    original_label = tkinter.Label(images_frame, text="Original Image", font=(20), bg="white", width=30, height=12, bd=5, highlightbackground="#00ff00",highlightthickness=5)
-    original_label.grid(row=0, column=0, padx=10)
-    proceLabel = tkinter.Label(images_frame, text="Processed Image\n(Compressed/Decompresssed)",font=(20), bg="white", width=30, height=12, bd=5, highlightbackground="#ff0000", highlightthickness=5)
-    proceLabel.grid(row=0, column=1, padx=10)
+    original_panel = tkinter.Frame(images_frame, width=PANEL_W, height=PANEL_H, bg="white", bd=5, highlightbackground="#00ff00", highlightthickness=5)
+    original_panel.grid(row=0, column=0, padx=10)
+    original_panel.pack_propagate(False)
+    original_label = tkinter.Label(original_panel, text="Original Image", font=(20), bg="white")
+    original_label.pack(expand=True, fill="both")
+    processed_panel = tkinter.Frame(images_frame, width=PANEL_W, height=PANEL_H,bg="white", bd=5, highlightbackground="#ff0000", highlightthickness=5)
+    processed_panel.grid(row=0, column=1, padx=10)
+    processed_panel.pack_propagate(False)
+    proceLabel = tkinter.Label(processed_panel, text="Processed Image\n(Compressed/Decompresssed)", font=(20), bg="white")
+    proceLabel.pack(expand=True, fill="both")
     con = tkinter.Frame(root, bg="#f0f0f0")
     con.pack(pady=30)
     
